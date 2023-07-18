@@ -2809,6 +2809,7 @@ void CMenus::RenderSettingsAppearance(CUIRect MainView)
 
 		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ClNameplatesTeamcolors, Localize("Use team colors for name plates"), &g_Config.m_ClNameplatesTeamcolors, &Section, LineSize);
 		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ClNameplatesStrong, Localize("Show hook strength indicator"), &g_Config.m_ClNameplatesStrong, &Section, LineSize);
+		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ClNameplatesHasRank, Localize("Show rank indicator"), &g_Config.m_ClNameplatesHasRank, &Section, LineSize);
 
 		Section.HSplitTop(LineSize, &Button, &Section);
 		if(DoButton_CheckBox(&g_Config.m_ClShowDirection, Localize("Show other players' key presses"), g_Config.m_ClShowDirection >= 1, &Button))

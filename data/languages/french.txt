@@ -1730,3 +1730,6 @@ Axis
 
 Graphics card
 == 
+
+Show rank indicator
+== Afficher l'indicateur de classement

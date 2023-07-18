@@ -14,6 +14,8 @@
 #include "controls.h"
 #include "nameplates.h"
 
+using namespace FontIcons;
+
 void CNamePlates::RenderNameplate(
 	const CNetObj_Character *pPrevChar,
 	const CNetObj_Character *pPlayerChar,
@@ -80,7 +82,7 @@ void CNamePlates::RenderNameplatePos(vec2 Position, const CNetObj_PlayerInfo *pP
 	}
 
 	// render name plate
-	if((!pPlayerInfo->m_Local || g_Config.m_ClNameplatesOwn) && g_Config.m_ClNameplates)
+	if((!pPlayerInfo->m_Local || g_Config.m_ClNameplatesOwn || g_Config.ms_ClNameplatesHasRank) && g_Config.m_ClNameplates)
 	{
 		float a = 1;
 		if(g_Config.m_ClNameplatesAlways == 0)
@@ -128,6 +130,36 @@ void CNamePlates::RenderNameplatePos(vec2 Position, const CNetObj_PlayerInfo *pP
 
 				TextRender()->RecreateTextContainer(m_aNamePlates[ClientID].m_ClanNameTextContainerIndex, &Cursor, pClan);
 				Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
+			}
+		}
+
+		if(g_Config.m_ClNameplatesHasRank)
+		{
+			const int score = pPlayerInfo->m_Score;
+			if(score != m_aNamePlates[ClientID].m_Score)
+			{
+				m_aNamePlates[ClientID].m_Score = score;
+				if(score != -9999)
+				{
+					char scoreText[128] = {0};
+					str_time((int64_t)absolute(score) * 100, TIME_HOURS, scoreText, sizeof(scoreText));
+
+					CTextCursor Cursor;
+					TextRender()->SetCursor(&Cursor, 0, 0, FontSize * 0.8f, TEXTFLAG_RENDER);
+					Cursor.m_LineWidth = -1;
+
+					// create nameplates at standard zoom
+					float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+					Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+					RenderTools()->MapScreenToInterface(m_pClient->m_Camera.m_Center.x, m_pClient->m_Camera.m_Center.y);
+
+					m_aNamePlates[ClientID].m_ScoreTextWidth = TextRender()->TextWidth(FontSize, scoreText, -1, -1.0f);
+
+					TextRender()->RecreateTextContainer(m_aNamePlates[ClientID].m_ScoreTextContainerIndex, &Cursor, scoreText);
+					Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
+				}
+				else
+					m_aNamePlates[ClientID].m_ScoreTextContainerIndex.Reset();
 			}
 		}
 
@@ -189,6 +221,46 @@ void CNamePlates::RenderNameplatePos(vec2 Position, const CNetObj_PlayerInfo *pP
 			TextRender()->TextColor(Color);
 			float XOffSet = TextRender()->TextWidth(FontSize, aFriendMark, -1, -1.0f) / 2.0f;
 			TextRender()->Text(Position.x - XOffSet, YOffset, FontSize, aFriendMark, -1.0f);
+		}
+
+		if(g_Config.m_ClNameplatesHasRank) // Contextual leaderboard infos
+		{	
+			char aBuf[128] = {0};
+			FontSize *= 0.8f;
+				
+			// Flag & Ping
+			str_format(aBuf, sizeof(aBuf), "%d", clamp(m_pClient->m_Snap.m_apPlayerInfos[ClientID]->m_Latency, 0, 999));
+			float pw = TextRender()->TextWidth(FontSize, aBuf, -1, -1.0f);
+			
+			YOffset -= FontSize;
+			float XOffset = (pw + FontSize * 2.0f) / 2.0f;
+			m_pClient->m_CountryFlags.Render(m_pClient->m_aClients[ClientID].m_Country, ColorRGBA(1.0f, 1.0f, 1.0f, a*Alpha),
+				Position.x - XOffset, YOffset, FontSize * 2.0f, FontSize);
+			XOffset -= FontSize * 2.0f;
+			TextRender()->TextColor(color_cast<ColorRGBA>(ColorHSLA((300.0f - clamp(pPlayerInfo->m_Latency, 0, 300)) / 1000.0f, 1.0f, 0.5f, a * Alpha)));
+			TextRender()->Text(Position.x - XOffset, YOffset, FontSize, aBuf, -1.0f);
+			TextRender()->TextColor(TextRender()->DefaultTextColor());
+
+			// Rank
+			if(m_aNamePlates[ClientID].m_ScoreTextContainerIndex.Valid())
+			{
+				// render Indicator
+				YOffset -= FontSize;
+				TextRender()->TextColor(TColor);
+				TextRender()->TextOutlineColor(TOutlineColor);
+				TextRender()->SetCurFont(TextRender()->GetFont(TEXT_FONT_ICON_FONT));
+				float iw = TextRender()->TextWidth(FontSize, FONT_ICON_FLAG_CHECKERED, -1, -1.0f);
+				float sw = m_aNamePlates[ClientID].m_ScoreTextWidth;
+				
+				float XOffset = (sw + iw) / 2.0f;
+				TextRender()->Text(Position.x - XOffset, YOffset, FontSize*0.8f, FONT_ICON_FLAG_CHECKERED, -1.0f);
+				TextRender()->SetCurFont(nullptr);
+				XOffset -= iw;
+
+				TextRender()->RenderTextContainer(m_aNamePlates[ClientID].m_ScoreTextContainerIndex, TColor, TOutlineColor, Position.x - XOffset, YOffset);
+				
+			}
+			FontSize /= 0.8f;
 		}
 
 		if(g_Config.m_Debug || g_Config.m_ClNameplatesIDs) // render client id when in debug as well
@@ -355,4 +427,14 @@ void CNamePlates::OnInit()
 	m_DirectionQuadContainerIndex = Graphics()->CreateQuadContainer(false);
 	RenderTools()->QuadContainerAddSprite(m_DirectionQuadContainerIndex, 0.f, 0.f, 22.f);
 	Graphics()->QuadContainerUpload(m_DirectionQuadContainerIndex);
+}
+
+
+
+bool CNamePlates::AdvancedMode()
+{
+	if(g_Config.m_ClNameplatesHasRank)
+		return true;
+	else
+		return false;
 }

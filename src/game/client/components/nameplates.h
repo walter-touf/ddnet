@@ -22,10 +22,12 @@ struct SPlayerNamePlate
 	{
 		m_NameTextContainerIndex.Reset();
 		m_ClanNameTextContainerIndex.Reset();
+		m_ScoreTextContainerIndex.Reset();
 		m_aName[0] = 0;
 		m_aClanName[0] = 0;
-		m_NameTextWidth = m_ClanNameTextWidth = 0.f;
-		m_NameTextFontSize = m_ClanNameTextFontSize = 0;
+		m_Score = 0;
+		m_NameTextWidth = m_ClanNameTextWidth = m_ScoreTextWidth = 0.f;
+		m_NameTextFontSize = m_ClanNameTextFontSize  = 0;
 	}
 
 	char m_aName[MAX_NAME_LENGTH];
@@ -37,6 +39,10 @@ struct SPlayerNamePlate
 	float m_ClanNameTextWidth;
 	STextContainerIndex m_ClanNameTextContainerIndex;
 	float m_ClanNameTextFontSize;
+
+	int m_Score;
+	float m_ScoreTextWidth;
+	STextContainerIndex m_ScoreTextContainerIndex;
 };
 
 class CNamePlates : public CComponent
@@ -61,6 +67,8 @@ public:
 	virtual void OnRender() override;
 
 	void SetPlayers(class CPlayers *pPlayers);
+	bool AdvancedMode();
+
 };
 
 #endif

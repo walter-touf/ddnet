@@ -446,6 +446,11 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 			ColorRGBA Color = color_cast<ColorRGBA>(ColorHSLA(g_Config.m_ClAuthedPlayerColor));
 			TextRender()->TextColor(Color);
 		}
+		if(m_pClient->m_aClients[pInfo->m_ClientID].m_FreezeEnd != 0)
+		{
+			ColorRGBA Color = ColorRGBA(1.0f, 0.f, 0.f, 1.0f);
+			TextRender()->TextColor(Color);
+		}
 
 		if(g_Config.m_ClShowIDs)
 		{
